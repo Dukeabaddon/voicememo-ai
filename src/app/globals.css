@@ -1,0 +1,49 @@
+@import "tailwindcss";
+
+:root {
+  --background: #F8FAFC;
+  --foreground: #1E293B;
+  --color-primary: #2563EB;
+  --color-secondary: #3B82F6;
+  --color-cta: #F97316;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--color-primary);
+  --color-secondary: var(--color-secondary);
+  --color-cta: var(--color-cta);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-space-mono);
+
+  @keyframes loading {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-mono), monospace;
+}
+
+/* Claude-Inspired Swiss Modern Utilities */
+.claude-card {
+  @apply bg-white border border-zinc-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-300;
+}
+
+.claude-button {
+  @apply bg-zinc-900 text-white px-6 py-2.5 rounded-xl font-medium hover:bg-zinc-800 transition-all active:scale-95 disabled:opacity-50;
+}
+
+.claude-input {
+  @apply border border-zinc-200 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-zinc-900/10 bg-zinc-50/50 transition-all;
+}
+
+@layer utilities {
+  .sidebar-item {
+    @apply flex items-center gap-3 px-4 py-2.5 rounded-xl text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 transition-all text-sm;
+  }
+}
