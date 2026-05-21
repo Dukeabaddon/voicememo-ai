@@ -116,6 +116,8 @@ flowchart LR
 
 Secrets only in `.env.local` (gitignored). Rotate any key that was shared or logged.
 
+Git: run `./scripts/setup-git-hooks.sh` after clone — blocks Cursor `Co-authored-by` injection. See [GIT_ATTRIBUTION.md](GIT_ATTRIBUTION.md).
+
 ---
 
 ## Requirements

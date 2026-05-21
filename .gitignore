@@ -68,11 +68,14 @@ rca-*.md
 design-system/
 reference/
 
-# Scratch / tests / local scripts
+# Scratch / tests
 test-agora*.mjs
 src/draft.txt
 src/app/api/debug/
-scripts/
+
+# Keep attribution guard scripts
+!scripts/
+!scripts/*.sh
 
 # Coverage
 /coverage

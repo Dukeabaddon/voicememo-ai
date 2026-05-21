@@ -1,0 +1,9 @@
+# VoiceMemo AI — agent rules
+
+Never add to git commits, PR descriptions, or code comments:
+- Co-authored-by: Cursor
+- Made-with: Cursor
+- cursoragent / cursoragents attribution
+
+Use only the repository git identity (Aaron Mecate / aaronmecate182@gmail.com).
+For commits from this workspace, prefer: `./scripts/safe-git-commit.sh "message"`

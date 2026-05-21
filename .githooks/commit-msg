@@ -1,0 +1,12 @@
+#!/bin/sh
+# Block Cursor agent co-author injection on every commit.
+MSG_FILE="$1"
+[ -f "$MSG_FILE" ] || exit 0
+
+if grep -qiE '^Co-authored-by:.*cursor(agent)?@cursor\.com' "$MSG_FILE"; then
+  echo "hooks/commit-msg: blocked Co-authored-by Cursor trailer." >&2
+  echo "Use: scripts/safe-git-commit.sh  OR disable Cursor Agents → Attribution." >&2
+  exit 1
+fi
+
+exit 0
