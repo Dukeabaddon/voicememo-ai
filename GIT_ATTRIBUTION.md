@@ -2,35 +2,23 @@
 
 ## Root cause
 
-**Cursor IDE / Agent** can append this trailer when it runs `git commit`:
+| Layer | Finding |
+|-------|---------|
+| **Cursor IDE** | Agents → **Attribution** appends `Co-authored-by: Cursor <cursoragent@cursor.com>` when Cursor runs `git commit`. |
+| **Cursor CLI** | `~/.cursor/cli-config.json` → `commitAttribution` / `prAttribution` must be `false`. |
+| **GitHub UI** | Contributors sidebar **caches** old co-authors after history rewrite; API may show 1 user while UI still shows 2. |
+| **Not caused by** | VoiceMemo code, MCP, CI, npm scripts, or repo `.git/hooks` samples (inactive until `core.hooksPath` is set). |
 
-```text
-Co-authored-by: Cursor <cursoragent@cursor.com>
-```
+## Disable in Cursor (required)
 
-GitHub maps that email to the **cursoragent** account → shows a second **Contributor** even when you are the only author.
+Per [disable Cursor attribution guide](https://www.mehmetbaykar.com/posts/how-to-disable-made-with-cursor-attribution/):
 
-This is **not** from VoiceMemo app code, MCP, CI, or repo hooks. It is injected by **Cursor’s Attribution** feature at commit time.
+1. **Cursor Settings** (not VS Code) → **Agents** → **Attribution**
+2. Turn **Commit Attribution** OFF
+3. Turn **PR Attribution** OFF
+4. Restart Cursor
 
-## What we fixed in this repo
-
-| Item | Purpose |
-|------|---------|
-| `.githooks/commit-msg` | Rejects commits that still contain a Cursor co-author line |
-| `scripts/setup-git-hooks.sh` | Sets `core.hooksPath`, local `user.name` / `user.email` |
-| `scripts/safe-git-commit.sh` | Commits via `git commit-tree` (Cursor cannot append trailers) |
-| `.cursorrules` | Tells agents not to add attribution |
-
-After clone:
-
-```bash
-./scripts/setup-git-hooks.sh
-```
-
-## Cursor settings (you)
-
-1. **Cursor Settings → Agents → Attribution → OFF**
-2. CLI (if you use `cursor` CLI), create `~/.cursor/cli-config.json`:
+CLI (`~/.cursor/cli-config.json`):
 
 ```json
 {
@@ -39,25 +27,54 @@ After clone:
 }
 ```
 
-3. Restart Cursor.
+Run `cursor /update-cli-config` if you use the CLI.
 
-## If GitHub still shows `cursoragent`
+## Repo hooks (permanent sanitization)
 
-Commits on `main` are already clean. The sidebar list is **cached** by GitHub.
+This repo uses **`core.hooksPath=.githooks`** (not `.git/hooks/` — same effect when configured).
 
-**There is no “remove contributor” button** in the repo UI.
+| Hook | Role |
+|------|------|
+| `prepare-commit-msg` | **Strips** `cursoragent@cursor.com`, `Co-authored-by: Cursor`, `Made-with: Cursor` |
+| `commit-msg` | **Blocks** commit if any Cursor trailer remains |
 
-Options:
+After clone:
 
-1. Wait 24–72h after the latest force-push.
-2. [GitHub Support](https://support.github.com/contact?tags=rr-remove-data) — ask to refresh contributor cache for `Dukeabaddon/voicememo-ai`.
-3. **Recreate repo** (same name, empty) and push once — clears the graph immediately (loses stars/issues).
+```bash
+./scripts/setup-git-hooks.sh
+```
+
+## Git identity
+
+| Scope | Expected |
+|-------|----------|
+| `user.name` | Aaron Mecate |
+| `user.email` | aaronmecate182@gmail.com |
+| Cursor identity | **Must not** appear |
+
+## History on `main`
+
+Current `main` has **no** Cursor co-author trailers. Older unreachable commits in **reflog** may still contain them locally; they are **not** on GitHub `main`.
+
+**History rewrite:** only needed if you push old branches/tags with co-authors. Do **not** rewrite without explicit approval. Safer: keep clean `main` + cache refresh below.
+
+## Refresh GitHub contributor cache (no repo delete)
+
+```bash
+# From repo root, with gh authenticated:
+git branch main-cache-bust
+git push origin main-cache-bust
+gh repo edit Dukeabaddon/voicememo-ai --default-branch main-cache-bust
+sleep 3
+gh repo edit Dukeabaddon/voicememo-ai --default-branch main
+git push origin --delete main-cache-bust
+```
+
+Then hard-refresh the repo page. If `cursoragent` remains, open a [GitHub Support](https://support.github.com/contact?tags=rr-remove-data) ticket for contributor-cache refresh.
 
 ## Verify
 
 ```bash
-git log -1 --format=%B | grep -i cursor || echo "clean"
-curl -s https://api.github.com/repos/Dukeabaddon/voicememo-ai/contributors | grep login
+git log main --format=%B | grep -iE 'co-authored-by:.*cursor|cursoragent' || echo "history clean"
+curl -s https://api.github.com/repos/Dukeabaddon/voicememo-ai/contributors | grep '"login"'
 ```
-
-Only `Dukeabaddon` should appear when history is clean.
